@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "soft-target-finetuning"
+version = "0.1.0"
+description = "Minimal reference implementation of SFT and SoFT"
+requires-python = ">=3.10"
+dependencies = [
+  "accelerate>=1.1",
+  "datasets>=3.0",
+  "torch>=2.4",
+  "transformers>=4.51",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.0"]
+
+[project.scripts]
+soft-train = "soft_target_finetuning.train:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
