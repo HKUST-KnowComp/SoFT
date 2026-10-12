@@ -24,9 +24,19 @@ def messages_from_row(row: dict[str, Any]) -> list[dict[str, Any]]:
     if row.get("messages"):
         messages = []
         for source in row["messages"]:
-            message = {key: value for key, value in source.items() if value not in (None, "", [])}
-            if isinstance(message.get("tool_calls"), str):
-                message["tool_calls"] = json.loads(message["tool_calls"])
+            message = {
+                "role": source.get("role", ""),
+                "content": source.get("content") or "",
+            }
+            for key in ("name", "tool_call_id"):
+                if source.get(key):
+                    message[key] = source[key]
+            if source.get("tool_calls"):
+                message["tool_calls"] = (
+                    json.loads(source["tool_calls"])
+                    if isinstance(source["tool_calls"], str)
+                    else source["tool_calls"]
+                )
             messages.append(message)
         return messages
     return [*row.get("prompt", []), *row.get("completion", [])]
