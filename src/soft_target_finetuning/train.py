@@ -42,6 +42,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", required=True)
     parser.add_argument("--dataset", required=True)
+    parser.add_argument("--track", choices=("reasoning", "agentic", "all"), default="reasoning")
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--objective", choices=("sft", "soft"), default="soft")
     parser.add_argument("--budgets", type=Path, default=Path("configs/reasoning-1.5b.json"))
@@ -58,7 +59,10 @@ def main() -> None:
     tokenizer = AutoTokenizer.from_pretrained(args.model, trust_remote_code=True)
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token = tokenizer.eos_token
+    tokenizer.padding_side = "right"
     raw = load_dataset(args.dataset, split="train")
+    if args.track != "all" and "track" in raw.column_names:
+        raw = raw.filter(lambda row: row["track"] == args.track)
     train_data = tokenize_dataset(raw, tokenizer, args.max_length)
     budgets = json.loads(args.budgets.read_text()) if args.objective == "soft" else {"default": 1.0}
 

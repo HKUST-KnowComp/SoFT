@@ -31,12 +31,14 @@ message lists, plus a `domain` or `task` column.
 accelerate launch -m soft_target_finetuning.train \
   --objective sft --model Qwen/Qwen2.5-1.5B-Instruct \
   --dataset Egbertjing/SoFT-Mixed-Domain-Distillation \
+  --track reasoning \
   --output-dir outputs/sft --bf16
 
 # SoFT with the released 1.5B reasoning budgets
 accelerate launch -m soft_target_finetuning.train \
   --objective soft --model Qwen/Qwen2.5-1.5B-Instruct \
   --dataset Egbertjing/SoFT-Mixed-Domain-Distillation \
+  --track reasoning \
   --budgets configs/reasoning-1.5b.json --output-dir outputs/soft --bf16
 ```
 
