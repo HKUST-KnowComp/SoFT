@@ -45,24 +45,27 @@ def tokenize_dataset(dataset: Dataset, tokenizer, max_length: int) -> Dataset:
         tools = row.get("tools")
         if isinstance(tools, str) and tools:
             tools = json.loads(tools)
-        rendered = tokenizer.apply_chat_template(
-            messages,
-            tools=tools or None,
-            tokenize=True,
-            add_generation_prompt=False,
-            return_dict=True,
-            return_assistant_tokens_mask=True,
-            truncation=True,
-            max_length=max_length,
-        )
-        input_ids = rendered["input_ids"]
-        assistant_mask = rendered.get("assistant_masks") or rendered.get("assistant_tokens_mask")
-        if assistant_mask is None:
-            raise ValueError("tokenizer chat template does not expose an assistant mask")
+        input_ids: list[int] = []
+        assistant_mask: list[bool] = []
+        for end, message in enumerate(messages, start=1):
+            current = tokenizer.apply_chat_template(
+                messages[:end], tools=tools or None, tokenize=True, add_generation_prompt=False
+            )
+            common = 0
+            for left, right in zip(input_ids, current):
+                if left != right:
+                    break
+                common += 1
+            input_ids = current
+            assistant_mask = assistant_mask[:common] + [
+                message.get("role") == "assistant"
+            ] * (len(current) - common)
+        input_ids = input_ids[:max_length]
+        assistant_mask = assistant_mask[:max_length]
         labels = [token if keep else -100 for token, keep in zip(input_ids, assistant_mask)]
         return {
             "input_ids": input_ids,
-            "attention_mask": rendered.get("attention_mask", [1] * len(input_ids)),
+            "attention_mask": [1] * len(input_ids),
             "labels": labels,
             "domain": normalized_domain(row),
         }
