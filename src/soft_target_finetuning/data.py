@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from datasets import Dataset
@@ -21,7 +22,13 @@ DOMAIN_ALIASES = {
 
 def messages_from_row(row: dict[str, Any]) -> list[dict[str, Any]]:
     if row.get("messages"):
-        return row["messages"]
+        messages = []
+        for source in row["messages"]:
+            message = {key: value for key, value in source.items() if value not in (None, "", [])}
+            if isinstance(message.get("tool_calls"), str):
+                message["tool_calls"] = json.loads(message["tool_calls"])
+            messages.append(message)
+        return messages
     return [*row.get("prompt", []), *row.get("completion", [])]
 
 
@@ -35,8 +42,12 @@ def tokenize_dataset(dataset: Dataset, tokenizer, max_length: int) -> Dataset:
 
     def tokenize(row: dict[str, Any]) -> dict[str, Any]:
         messages = messages_from_row(row)
+        tools = row.get("tools")
+        if isinstance(tools, str) and tools:
+            tools = json.loads(tools)
         rendered = tokenizer.apply_chat_template(
             messages,
+            tools=tools or None,
             tokenize=True,
             add_generation_prompt=False,
             return_dict=True,
