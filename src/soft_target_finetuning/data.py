@@ -50,26 +50,33 @@ def normalized_domain(row: dict[str, Any]) -> str:
 def tokenize_dataset(dataset: Dataset, tokenizer, max_length: int) -> Dataset:
     """Render conversations and supervise assistant spans only."""
 
+    def find_pattern(values: list[int], pattern: list[int], start: int) -> int:
+        for index in range(start, len(values) - len(pattern) + 1):
+            if values[index : index + len(pattern)] == pattern:
+                return index
+        return -1
+
     def tokenize(row: dict[str, Any]) -> dict[str, Any]:
         messages = messages_from_row(row)
         tools = row.get("tools")
         if isinstance(tools, str) and tools:
             tools = json.loads(tools)
-        input_ids: list[int] = []
-        assistant_mask: list[bool] = []
-        for end, message in enumerate(messages, start=1):
-            current = tokenizer.apply_chat_template(
-                messages[:end], tools=tools or None, tokenize=True, add_generation_prompt=False
-            )
-            common = 0
-            for left, right in zip(input_ids, current):
-                if left != right:
-                    break
-                common += 1
-            input_ids = current
-            assistant_mask = assistant_mask[:common] + [
-                message.get("role") == "assistant"
-            ] * (len(current) - common)
+        input_ids = tokenizer.apply_chat_template(
+            messages, tools=tools or None, tokenize=True, add_generation_prompt=False
+        )
+        assistant_mask = [False] * len(input_ids)
+        start_marker = tokenizer.encode("<|im_start|>assistant", add_special_tokens=False)
+        end_marker = tokenizer.encode("<|im_end|>\n", add_special_tokens=False)
+        cursor = 0
+        while True:
+            header = find_pattern(input_ids, start_marker, cursor)
+            if header < 0:
+                break
+            content_start = header + len(start_marker)
+            end = find_pattern(input_ids, end_marker, content_start)
+            content_end = len(input_ids) if end < 0 else end + len(end_marker)
+            assistant_mask[content_start:content_end] = [True] * (content_end - content_start)
+            cursor = content_end
         input_ids = input_ids[:max_length]
         assistant_mask = assistant_mask[:max_length]
         labels = [token if keep else -100 for token, keep in zip(input_ids, assistant_mask)]
