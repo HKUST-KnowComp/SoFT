@@ -44,7 +44,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dataset", required=True)
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--objective", choices=("sft", "soft"), default="soft")
-    parser.add_argument("--budgets", type=Path, default=Path("configs/soft.json"))
+    parser.add_argument("--budgets", type=Path, default=Path("configs/reasoning-1.5b.json"))
     parser.add_argument("--max-length", type=int, default=4096)
     parser.add_argument("--epochs", type=float, default=1.0)
     parser.add_argument("--learning-rate", type=float, default=2e-5)

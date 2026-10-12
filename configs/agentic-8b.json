@@ -1,9 +1,5 @@
 {
   "default": 0.3,
-  "Math": 0.3,
-  "Code": 0.5,
-  "Science": 0.3,
-  "General": 0.3,
   "Customer": 0.3,
   "Coding": 0.8,
   "Search": 0.3,

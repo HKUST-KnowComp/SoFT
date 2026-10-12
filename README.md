@@ -33,12 +33,15 @@ accelerate launch -m soft_target_finetuning.train \
   --dataset Egbertjing/SoFT-Mixed-Domain-Distillation \
   --output-dir outputs/sft --bf16
 
-# SoFT with domain budgets from configs/soft.json
+# SoFT with the released 1.5B reasoning budgets
 accelerate launch -m soft_target_finetuning.train \
   --objective soft --model Qwen/Qwen2.5-1.5B-Instruct \
   --dataset Egbertjing/SoFT-Mixed-Domain-Distillation \
-  --budgets configs/soft.json --output-dir outputs/soft --bf16
+  --budgets configs/reasoning-1.5b.json --output-dir outputs/soft --bf16
 ```
+
+Released budget files are provided separately for the 1.5B reasoning, 7B
+reasoning, and 8B agentic settings.
 
 The implementation intentionally contains only the SFT and fixed-reference SoFT
 objectives. Experiment orchestration, internal paths, credentials, evaluation

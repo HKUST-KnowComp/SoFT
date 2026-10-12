@@ -1,0 +1,8 @@
+{
+  "default": 0.35,
+  "General": 0.25,
+  "Math": 0.35,
+  "Science": 0.45,
+  "Code": 0.55
+}
+
